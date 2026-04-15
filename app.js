@@ -7,6 +7,7 @@ const methodOverride = require('method-override');
 const ejsMate = require('ejs-mate');
 const wrapAsync = require('./utils/wrapAsync.js')
 const ExpressError = require('./utils/ExpressError.js')
+const {listingSchema} = require('./schema.js')
 
 const port = 8080;
 const app = express();
@@ -38,6 +39,15 @@ async function main(){
     mongoose.connect(MONGO_URL);
 }
 
+const validateListing = (req,res,next) => {
+    let {error} = listingSchema.validate(req.body);
+    if(error){
+        let errorMsg = error.details.map((el) => el.message).join(",");
+        throw new ExpressError(400, errorMsg);
+    }else{
+        next();
+    }
+}
 
 // Handling Routes Here
 
@@ -65,11 +75,11 @@ app.get('/listings/:id', wrapAsync(async(req,res)=>{
 }))
 
 // Create New listing route
-app.post('/listings', wrapAsync(async (req,res,next)=>{
-    // let {title, description, image, price, location, country} = req.body;
-    if(!req.body.listing){
-        throw new ExpressError(400, "Send a valid data for listing..")
-    }
+app.post('/listings', validateListing, wrapAsync(async (req,res,next)=>{
+    // let {title, description, image, price, location, country} = req.body; 
+    // if(!req.body.listing){
+    //     throw new ExpressError(400, "Send a valid data for listing..")
+    // }
     const newListing = new Listing(req.body.listing);
     await newListing.save();
     res.redirect('/listings');
@@ -108,6 +118,7 @@ app.use((req,res,next) =>{
 // app.use((err,req,res,next)=>{res.send("Something went wrong.....")})
 app.use((err,req,res,next)=>{
     let {statusCode = 500, message = "Something went wrong...."} = err;
+    console.log(message);
     // res.status(statusCode).send(message);
     res.status(statusCode).render('listings/error.ejs', {message});
 })
