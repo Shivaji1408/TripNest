@@ -53,7 +53,7 @@ const validateListing = (req,res,next) => {
 
 // home Route
 app.get('/', (req,res)=>{
-    res.send("Working server");
+    res.render('./listings/home.ejs');
 })
 
 // Show All Listings route
