@@ -1,3 +1,4 @@
+// Joi is a popular schema description language and data validation library for JavaScript
 const Joi = require('joi');
 
 module.exports.listingSchema = Joi.object({
