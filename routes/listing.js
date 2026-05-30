@@ -1,19 +1,34 @@
 const express = require('express');
 const router = express.Router();
+const Listing = require('../models/listing.js');
+const wrapAsync = require('../utils/wrapAsync.js')
+const ExpressError = require('../utils/ExpressError.js')
+const {listingSchema} = require('../schema.js')
 
 
-router.get('/listings',wrapAsync(async (req,res) =>{
+const validateListing = (req,res,next) => {
+    let {error} = listingSchema.validate(req.body);
+    if(error){
+        let errorMsg = error.details.map((el) => el.message).join(",");
+        throw new ExpressError(400, errorMsg);
+    }else{
+        next();
+    }
+}
+
+
+router.get('/',wrapAsync(async (req,res) =>{
     const allListings = await Listing.find({});
     res.render('./listings/index.ejs', {allListings});
 }))
 
 // Create form route
-router.get('/listings/new', (req,res) =>{
+router.get('/new', (req,res) =>{
     res.render('./listings/newListing.ejs');
 })
 
 // Show Route
-router.get('/listings/:id', wrapAsync(async(req,res)=>{
+router.get('/:id', wrapAsync(async(req,res)=>{
     const {id} = req.params;
     let listing = await Listing.findById(id).populate('reviews');
     res.render('./listings/show.ejs', {listing});
@@ -21,7 +36,7 @@ router.get('/listings/:id', wrapAsync(async(req,res)=>{
 
 
 // Create New listing route
-router.post('/listings', validateListing, wrapAsync(async (req,res,next)=>{
+router.post('/', validateListing, wrapAsync(async (req,res,next)=>{
     // let {title, description, image, price, location, country} = req.body; 
     // if(!req.body.listing){
     //     throw new ExpressError(400, "Send a valid data for listing..")
@@ -33,14 +48,14 @@ router.post('/listings', validateListing, wrapAsync(async (req,res,next)=>{
 );
 
 // Edit form Route
-router.get('/listings/:id/edit', wrapAsync(async (req,res)=>{
+router.get('/:id/edit', wrapAsync(async (req,res)=>{
     const {id} = req.params;
     let listing = await Listing.findById(id);
     res.render('listings/edit.ejs', {listing});
 }))
 
 // Edit Route
-router.put('/listings/:id',wrapAsync(async (req,res)=>{
+router.put('/:id',wrapAsync(async (req,res)=>{
     let {id} = req.params;
     if(!req.body.listing){
         throw new ExpressError(400, "Send a valid data for listing..")
@@ -51,9 +66,11 @@ router.put('/listings/:id',wrapAsync(async (req,res)=>{
 }))
 
 // Delete route
-router.delete('/listings/:id/delete', wrapAsync(async (req,res)=>{
+router.delete('/:id/delete', wrapAsync(async (req,res)=>{
     let {id} = req.params;
     let deleted = await Listing.findByIdAndDelete(id);
     console.log(deleted);
     res.redirect('/listings');
 }))
+
+module.exports = router;
