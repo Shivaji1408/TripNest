@@ -5,49 +5,20 @@ const wrapAsync = require('../utils/wrapAsync.js');
 const passport = require('passport');
 const Local = require('passport-local');
 const {saveRedirectUrl} = require('../middleware.js');
+const userController = require('../controllers/users.js');
 
+// user signup From
+// user signup
+router.route('/signup')
+    .get(userController.signupForm)
+    .post(wrapAsync(userController.signup))
 
-router.get('/signup', (req,res)=>{
-    res.render("users/signup.ejs");
-})
+// login user form
+// login user
+router.route('/login')
+    .get(userController.loginForm)
+    .post(saveRedirectUrl ,passport.authenticate('local', {failureRedirect : "/login", failureFlash : true}) ,userController.login);
 
-router.post('/signup',wrapAsync (async (req,res)=>{
-    try{
-        let {username, email, password} = req.body;
-        const newUser = new User({email,username});
-        const registeredUser = await User.register(newUser, password);
-        console.log(registeredUser);
-        req.login(registeredUser, (err) => {
-            if(err){
-                return next(err);
-            }
-            req.flash("success","Welcome to Tripnest");
-            res.redirect('/listings');
-        })
-    }catch(e){
-        req.flash("error", e.message);
-        res.redirect('/signup');
-    }
-}))
-
-router.get('/login', (req,res)=>{
-    res.render('users/login.ejs');
-})
-
-router.post('/login', saveRedirectUrl ,passport.authenticate('local', {failureRedirect : "/login", failureFlash : true}) ,async(req,res)=>{
-    req.flash("success","Login on TripNest Successful");
-    let redirectUrl = res.locals.redirectUrl || "/listings";
-    res.redirect(redirectUrl);
-})
-
-router.get('/logout', (req,res,next)=>{
-    req.logout((err)=>{
-        if(err){
-            return next(err);
-        }
-        req.flash('success', 'You are Logged Out!!!');
-        res.redirect('/listings');
-    })
-})
+router.get('/logout', userController.logout);
 
 module.exports = router;
