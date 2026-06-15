@@ -1,4 +1,9 @@
 // required files
+if(process.env.NODE_ENV != "production"){
+    require('dotenv').config()
+}
+
+
 const express = require('express');
 const mongoose = require('mongoose');
 const Listing = require('./models/listing.js');
@@ -58,9 +63,9 @@ app.use((req,res, next)=>{
     next();
 })
 
-app.get('/', (req,res)=>{
-    res.send("Hii i am root")
-})
+// app.get('/', (req,res)=>{
+//     res.send("Hii i am root")
+// })
 
 app.get('/demoUser', async(req,res)=>{
     let fakeUser = new User({
@@ -76,7 +81,9 @@ app.listen(port, ()=>{
 });
 
 
+
 // database connection
+const dbUrl = process.env.ATLASDB_URL;
 const MONGO_URL = "mongodb://localhost:27017/tripnest";
 main().then(()=>{
     console.log('MongoDB Connected Successfully');
@@ -86,7 +93,8 @@ main().then(()=>{
 })
 
 async function main(){
-    mongoose.connect(MONGO_URL);
+    await mongoose.connect(MONGO_URL);
+    // await mongoose.connect(dbUrl);
 }
 
 // routes

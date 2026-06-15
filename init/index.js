@@ -3,6 +3,7 @@ const initData = require('./data.js');
 const Listing = require("../models/listing.js");
 
 const MONGO_URL = "mongodb://localhost:27017/tripnest";
+const ATLAS_URL = "" + process.env.ATLAS_URL;
 main().then(()=>{
     console.log('MongoDB Connected Successfully');
 }).catch((err)=>{
@@ -11,7 +12,7 @@ main().then(()=>{
 })
 
 async function main(){
-    await mongoose.connect(MONGO_URL);
+    await mongoose.connect(ATLAS_URL);
 }
 
 const initDB = async () => {
