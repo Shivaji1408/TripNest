@@ -10,18 +10,19 @@ const Listing = require('./models/listing.js');
 const path = require('path');
 const methodOverride = require('method-override');
 const ejsMate = require('ejs-mate');
-const wrapAsync = require('./utils/wrapAsync.js')
-const ExpressError = require('./utils/ExpressError.js')
-const {listingSchema, reviewSchema} = require('./schema.js')
-const Review = require('./models/review.js')
-const session = require('express-session')
-const flash = require('connect-flash')
-const listingsRouter = require('./routes/listing.js')
-const reviewsRouter = require('./routes/review.js')
-const userRouter = require('./routes/user.js')
-const passport = require('passport')
-const LocalStrategy = require('passport-local')
-const User = require('./models/user.js')
+const wrapAsync = require('./utils/wrapAsync.js');
+const ExpressError = require('./utils/ExpressError.js');
+const {listingSchema, reviewSchema} = require('./schema.js');
+const Review = require('./models/review.js');
+const session = require('express-session');
+const MongoStore = require('connect-mongo').default;
+const flash = require('connect-flash');
+const listingsRouter = require('./routes/listing.js');
+const reviewsRouter = require('./routes/review.js');
+const userRouter = require('./routes/user.js');
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+const User = require('./models/user.js');
 
 
 const port = 8080;
@@ -35,8 +36,21 @@ app.use(methodOverride("_method"));
 app.engine('ejs', ejsMate);
 app.use(express.static(path.join(__dirname,"public")));
 
+const dbUrl = process.env.ATLASDB_URL;
+const store = MongoStore.create({
+    mongoUrl:dbUrl,
+    crypto : {
+        secret : process.env.SECRET,
+    },
+    touchAfter : 24*60*60,
+});
+
+store.on("error", (err) => {
+    console.log("ERROR IN MONGO SESSION STORE",err);
+})
 const sessionOptions = {
-    secret : "Tripnest",
+    store,
+    secret : process.env.SECRET,
     resave : false,
     saveUninitialized : true,
     cookie : {
@@ -45,6 +59,7 @@ const sessionOptions = {
         httpOnly : true
     }
 }
+
 
 app.use(session(sessionOptions))
 app.use(flash())
@@ -83,7 +98,6 @@ app.listen(port, ()=>{
 
 
 // database connection
-const dbUrl = process.env.ATLASDB_URL;
 const MONGO_URL = "mongodb://localhost:27017/tripnest";
 main().then(()=>{
     console.log('MongoDB Connected Successfully');
