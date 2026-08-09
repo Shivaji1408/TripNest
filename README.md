@@ -1,2 +1,2 @@
 # TripNest
-A MERN based property booking application.
+A NodeJS, ExpressJS and MongoDB based destination booking application.
